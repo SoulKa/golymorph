@@ -32,10 +32,10 @@ func TestParsePathString(t *testing.T) {
 		{"foo/", []Element{{"foo", ElementTypeIdentifier}}, nil},
 		{".", []Element{ElementSelfReference}, nil},
 		{"", []Element{}, nil},
-		{`foo/"bar`, nil, errors.New(`unexpected end of string after 8 runes. Expected """`)},
-		{`fo#`, nil, errors.New(`unexpected character "#" at index 2. A non-enclosed path may only contain letters and digits`)},
+		{`foo/"bar`, nil, errors.New(`unexpected end of string after 8 runes. Expected ["]`)},
+		{`fo#`, nil, errors.New(`unexpected character [#] at index 2. A non-enclosed path may only contain letters and digits`)},
 		{`fo//bar`, nil, errors.New(`empty path element provided at index 3. Empty elements must be enclosed in quotes, e.g. /""/data`)},
-		{`.../foo`, nil, errors.New(`invalid path element "..." at index 0. Only "." or ".." allowed`)},
+		{`.../foo`, nil, errors.New(`invalid path element [...] at index 0. Only [.] or [..] allowed`)},
 	}
 
 	for _, tc := range testCases {

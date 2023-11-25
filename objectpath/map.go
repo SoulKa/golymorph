@@ -18,7 +18,7 @@ func compareStringsIgnoreCase(target string) func(string) bool {
 func GetValueAtPath(source any, path ObjectPath, out *reflect.Value) error {
 	value := reflect.ValueOf(source)
 	if value.Kind() != reflect.Ptr {
-		return fmt.Errorf(`cannot get value at path "%s": source is not a pointer`, path.String())
+		return fmt.Errorf(`cannot get value at path [%s]: source is not a pointer`, path.String())
 	}
 	value = value.Elem()
 
@@ -27,7 +27,7 @@ func GetValueAtPath(source any, path ObjectPath, out *reflect.Value) error {
 
 		// Check if the value is zero or nil
 		if !value.IsValid() {
-			return fmt.Errorf(`cannot enter field "%s" of path %s at index %d: value is zero or nil`, element.name, path.String(), i)
+			return fmt.Errorf(`cannot enter field [%s] of path [%s] at index %d: value is zero or nil`, element.name, path.String(), i)
 		}
 
 		// Dereference pointer
@@ -48,7 +48,7 @@ func GetValueAtPath(source any, path ObjectPath, out *reflect.Value) error {
 			}
 			value = value.FieldByIndex(field.Index)
 		default:
-			return fmt.Errorf(`cannot get value at path "%s": value at path index %d is neither a map nor struct`, path.String(), i)
+			return fmt.Errorf(`cannot get value at path [%s]: value at path index %d is neither a map nor struct`, path.String(), i)
 		}
 	}
 	*out = value

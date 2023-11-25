@@ -11,6 +11,13 @@ type TestCase struct {
 	output      any
 }
 
+type ErrorTestCase struct {
+	inputObject any
+	inputPath   string
+	newType     reflect.Type
+	error       string
+}
+
 type Animal struct {
 	Name      string
 	Specifics any
@@ -77,6 +84,28 @@ func TestAssignTypeAtPath(t *testing.T) {
 		outputType := reflect.TypeOf(animal.Specifics)
 		if outputType != newType {
 			t.Fatalf("expected output to be %v, but got %v", newType, outputType)
+		}
+	}
+}
+
+func TestAssignTypeAtPathWithError(t *testing.T) {
+	var testCases = []ErrorTestCase{
+		{true, "Specifics", reflect.TypeOf(0), `cannot get value at path ["Specifics"]: value at path index 0 is neither a map nor struct`},
+	}
+
+	for _, tc := range testCases {
+
+		// Arrange
+		err, inputPath := NewObjectPathFromString(tc.inputPath)
+		if err != nil {
+			t.Fatalf("error parsing input path [%s]: %s", tc.inputPath, err)
+		}
+
+		// Act
+		if err := AssignTypeAtPath(&tc.inputObject, *inputPath, tc.newType); err == nil {
+			t.Fatalf("expected error, but got none")
+		} else if err.Error() != tc.error {
+			t.Fatalf(`expected error to be [%s], but got [%s]`, tc.error, err)
 		}
 	}
 }

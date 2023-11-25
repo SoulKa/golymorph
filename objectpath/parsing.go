@@ -45,7 +45,7 @@ func (ctx *Context) hasNextChar() bool {
 // assertChar returns an error if the current character is not the expected character.
 func (ctx *Context) assertChar(expected rune) error {
 	if c := ctx.chars[ctx.i]; c != expected {
-		return fmt.Errorf(`unexpected character "%c" at index %d. Expected "%c"`, c, ctx.i, expected)
+		return fmt.Errorf(`unexpected character [%c] at index %d. Expected [%c]`, c, ctx.i, expected)
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func (ctx *Context) assertChar(expected rune) error {
 // assertNextChar returns an error if the next character is not the expected character.
 func (ctx *Context) assertNextChar(expected rune) error {
 	if !ctx.hasNextChar() {
-		return fmt.Errorf(`unexpected end of string after %d runes. Expected "%c"`, len(ctx.chars), expected)
+		return fmt.Errorf(`unexpected end of string after %d runes. Expected [%c]`, len(ctx.chars), expected)
 	}
 	ctx.i++
 	return ctx.assertChar(expected)
@@ -103,9 +103,9 @@ var charParsingFunctions = []func(ctx *Context) error{
 			}
 		}
 		if ctx.path.isCurrentPartEmpty() && !unicode.IsLetter(c) {
-			return fmt.Errorf(`unexpected character "%c" at index %d. A non-enclosed path must start with a letter`, c, ctx.i)
+			return fmt.Errorf(`unexpected character [%c] at index %d. A non-enclosed path must start with a letter`, c, ctx.i)
 		} else if !unicode.IsLetter(c) && !unicode.IsDigit(c) {
-			return fmt.Errorf(`unexpected character "%c" at index %d. A non-enclosed path may only contain letters and digits`, c, ctx.i)
+			return fmt.Errorf(`unexpected character [%c] at index %d. A non-enclosed path may only contain letters and digits`, c, ctx.i)
 		}
 		ctx.path.appendCharToCurrentElement(c)
 		return nil
@@ -143,7 +143,7 @@ var charParsingFunctions = []func(ctx *Context) error{
 		case '.':
 			ctx.path.appendCharToCurrentElement(c)
 			if e.name == "..." {
-				return fmt.Errorf(`invalid path element "..." at index %d. Only "." or ".." allowed`, ctx.i-2)
+				return fmt.Errorf(`invalid path element [...] at index %d. Only [.] or [..] allowed`, ctx.i-2)
 			} else if !ctx.hasNextChar() {
 				ctx.chars = append(ctx.chars, '/') // append slash to end of string to parse last element
 			}
@@ -157,7 +157,7 @@ var charParsingFunctions = []func(ctx *Context) error{
 			ctx.state = ParsingStateSlash
 			ctx.reprocess = true
 		default:
-			return fmt.Errorf(`unexpected character "%c" at index %d. Expected either "." or "/"`, c, ctx.i)
+			return fmt.Errorf(`unexpected character [%c] at index %d. Expected either [.] or [/]`, c, ctx.i)
 		}
 		return nil
 	},
