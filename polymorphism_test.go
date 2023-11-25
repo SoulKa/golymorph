@@ -38,7 +38,7 @@ var testCases = []TestCase{
 func TestPolymorphism_AssignTargetType(t *testing.T) {
 
 	// Arrange
-	err, polymorphism := NewPolymorphismAtPath("type", "/specifics", animalTypeMap)
+	err, polymorphism := NewDiscriminatingPolymorphism("type", "/specifics", animalTypeMap)
 	if err != nil {
 		t.Fatalf("error creating polymorphism: %s", err)
 	}
@@ -55,8 +55,10 @@ func TestPolymorphism_AssignTargetType(t *testing.T) {
 
 		// Act
 		var actualAnimal Animal
-		if err := polymorphism.AssignTargetType(&actualAnimalJson, &actualAnimal); err != nil {
+		if err, applied := polymorphism.AssignTargetType(&actualAnimalJson, &actualAnimal); err != nil {
 			t.Fatalf("error assigning target type to horse: %s", err)
+		} else if !applied {
+			t.Fatalf("expected polymorphism to be applied")
 		}
 		t.Logf("actualAnimal: %+v\n", actualAnimal)
 

@@ -16,18 +16,16 @@ type TypeMap map[any]reflect.Type
 
 // Polymorphism is a mapper that assigns a target type based on a discriminator value
 type Polymorphism struct {
-	discriminatorKey objectpath.ObjectPath
-	targetPath       objectpath.ObjectPath
-	mapping          TypeMap
+	targetPath objectpath.ObjectPath
+	rules      []Rule
 }
 
-// NewPolymorphism creates a new Polymorphism mapper
-func NewPolymorphism(discriminatorKey string, mapping TypeMap) (error, *Polymorphism) {
-	return NewPolymorphismAtPath(discriminatorKey, "/", mapping)
+type Polymorpher interface {
+	AssignTargetType(source any, target any) error
 }
 
-// NewPolymorphismAtPath creates a new Polymorphism mapper.
-func NewPolymorphismAtPath(discriminatorKey string, targetPath string, mapping TypeMap) (error, *Polymorphism) {
+// NewDiscriminatingPolymorphism creates a new Polymorphism mapper.
+func NewDiscriminatingPolymorphism(discriminatorKey string, targetPath string, mapping TypeMap) (error, *Polymorphism) {
 
 	// parse discriminator key
 	err, discriminatorKeyObjectPath := objectpath.NewObjectPathFromString(discriminatorKey)
@@ -49,34 +47,38 @@ func NewPolymorphismAtPath(discriminatorKey string, targetPath string, mapping T
 		return err, nil
 	}
 
+	// create rules
+	var rules []Rule
+	for discriminatorValue, targetType := range mapping {
+		rules = append(rules, Rule{
+			*discriminatorKeyObjectPath,
+			ComparatorTypeEquality,
+			discriminatorValue,
+			targetType,
+		})
+	}
+
 	return nil, &Polymorphism{
-		*discriminatorKeyObjectPath,
 		*targetObjectPath,
-		mapping,
+		rules,
 	}
 }
 
-// AssignTargetType assigns the target type based on the discriminator value in the source.
-// The source and target must be pointers.
-func (polymorphism *Polymorphism) AssignTargetType(source any, target any) error {
+// AssignTargetType assigns the determined type to target based on the polymorphism rules. The matching rule with the
+// highest priority is used. If no rule matches, the target type is not changed. The source and target must be pointers.
+func (polymorphism *Polymorphism) AssignTargetType(source any, target any) (error, bool) {
 
-	// get discriminator value
-	var discriminatorVal reflect.Value
-	if err := objectpath.GetValueAtPath(source, polymorphism.discriminatorKey, &discriminatorVal); err != nil {
-		return errors.Join(errors.New("error getting discriminator value"), err)
+	// check for each rule if it matches and assign type if it does
+	for _, rule := range polymorphism.rules {
+		if err, matches := rule.Matches(source); err != nil {
+			return errors.Join(errors.New("error applying rule"), err), false
+		} else if matches {
+			if err := objectpath.AssignTypeAtPath(target, polymorphism.targetPath, rule.NewType); err != nil {
+				return errors.Join(errors.New("error assigning type to target"), err), false
+			}
+			return nil, true
+		}
 	}
-	discriminatorValue := discriminatorVal.Interface()
-
-	// get type for discriminator value
-	targetType, ok := polymorphism.mapping[discriminatorValue]
-	if !ok {
-		return fmt.Errorf("no target type found for discriminator value %s", discriminatorValue)
-	}
-
-	// create target with type
-	if err := objectpath.AssignTypeAtPath(target, polymorphism.targetPath, targetType); err != nil {
-		return errors.Join(errors.New("error assigning type to target"), err)
-	}
-	return nil
+	return nil, false
 
 }
