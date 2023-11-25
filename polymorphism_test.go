@@ -16,8 +16,6 @@ type Horse struct {
 	Shoes int
 }
 
-const jsonHorse = `{ "name": "horsey", "specifics": { "type": "horse", "shoes": 4 } }`
-
 type Duck struct {
 	Feathers int
 }
@@ -27,16 +25,14 @@ var animalTypeMap = TypeMap{
 	"duck":  reflect.TypeOf(Duck{}),
 }
 
-const jsonDuck = `{ "name": "ducky", "specifics": { "type": "duck", "feathers": 1000 } }`
-
 type TestCase struct {
 	inputJson string
 	output    Animal
 }
 
 var testCases = []TestCase{
-	{jsonHorse, Animal{"horsey", Horse{4}}},
-	{jsonDuck, Animal{"ducky", Duck{1000}}},
+	{`{ "name": "horsey", "specifics": { "type": "horse", "shoes": 4 } }`, Animal{"horsey", Horse{4}}},
+	{`{ "name": "ducky", "specifics": { "type": "duck", "feathers": 1000 } }`, Animal{"ducky", Duck{1000}}},
 }
 
 func TestPolymorphism_AssignTargetType(t *testing.T) {
