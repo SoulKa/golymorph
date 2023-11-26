@@ -61,6 +61,10 @@ func NewSelfReferencePath() *ObjectPath {
 	return &ObjectPath{Elements{ElementSelfReference}, false}
 }
 
+func NewEmptyPath() *ObjectPath {
+	return &ObjectPath{Elements{}, false}
+}
+
 // IsAbsolutePath returns true if the path starts with a root element
 func (p *ObjectPath) IsAbsolutePath() bool {
 	return p.isAbsolute

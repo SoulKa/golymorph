@@ -55,8 +55,7 @@ func NewDiscriminatingPolymorphism(discriminatorKey string, targetPath string, m
 	for discriminatorValue, targetType := range mapping {
 		rules = append(rules, Rule{
 			*discriminatorKeyObjectPath,
-			ComparatorTypeEquality,
-			discriminatorValue,
+			func(v any) bool { return v == discriminatorValue },
 			targetType,
 		})
 	}

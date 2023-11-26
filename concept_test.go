@@ -128,3 +128,11 @@ func SetField(animalPtr any) {
 	value.Set(reflect.ValueOf(Horse{4}))
 	fmt.Printf("animal: %+v\n", reflect.ValueOf(animalPtr).Elem().Interface())
 }
+
+func TestCompareAny(t *testing.T) {
+	a := any(1)
+	b := any(1)
+	if a != b {
+		t.Fatalf("expected %v to equal %v", a, b)
+	}
+}

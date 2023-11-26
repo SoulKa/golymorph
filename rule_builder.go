@@ -5,42 +5,45 @@ import (
 	"reflect"
 )
 
+// RuleBuilder is a builder for a polymorphism rule.
 type RuleBuilder struct {
-	errors          []error
-	valuePath       objectpath.ObjectPath
-	comparatorType  ComparatorType
-	comparatorValue any
-	newType         reflect.Type
+	errors         []error
+	valuePath      objectpath.ObjectPath
+	comparatorFunc func(any) bool
+	newType        reflect.Type
 }
 
 type RuleBuilderBase interface {
-	WhenValueAt(valuePath objectpath.ObjectPath) RuleBuilderPathSet
-	WhenValueAtPathString(valuePath string) RuleBuilderPathSet
+	WhenValueAt(valuePath objectpath.ObjectPath) RuleBuilderConditionSetter
+	WhenValueAtPathString(valuePath string) RuleBuilderConditionSetter
 }
 
-type RuleBuilderPathSet interface {
-	IsEqualTo(value any) RuleBuilderConditionSet
-	Matches(comparator func(any) bool) RuleBuilderConditionSet
+type RuleBuilderConditionSetter interface {
+	IsEqualTo(value any) RuleBuilderTypeAssigner
+	Matches(comparator func(any) bool) RuleBuilderTypeAssigner
 }
 
-type RuleBuilderConditionSet interface {
-	ThenAssignType(newType reflect.Type) RuleBuilderNewTypeSet
+type RuleBuilderTypeAssigner interface {
+	ThenAssignType(newType reflect.Type) RuleBuilderFinalizer
 }
 
-type RuleBuilderNewTypeSet interface {
-	BuildRule() Rule
+type RuleBuilderFinalizer interface {
+	Build() ([]error, Rule)
 }
 
+// NewRuleBuilder creates a new RuleBuilder. It enables a fluent interface for building a Rule.
 func NewRuleBuilder() RuleBuilderBase {
 	return &RuleBuilder{}
 }
 
-func (b *RuleBuilder) WhenValueAt(valuePath objectpath.ObjectPath) RuleBuilderPathSet {
+// WhenValueAt sets the path to the value in the source to compare.
+func (b *RuleBuilder) WhenValueAt(valuePath objectpath.ObjectPath) RuleBuilderConditionSetter {
 	b.valuePath = valuePath
 	return b
 }
 
-func (b *RuleBuilder) WhenValueAtPathString(valuePath string) RuleBuilderPathSet {
+// WhenValueAtPathString sets the path to the value in the source to compare.
+func (b *RuleBuilder) WhenValueAtPathString(valuePath string) RuleBuilderConditionSetter {
 	if err, path := objectpath.NewObjectPathFromString(valuePath); err != nil {
 		b.appendError(err)
 	} else {
@@ -49,34 +52,31 @@ func (b *RuleBuilder) WhenValueAtPathString(valuePath string) RuleBuilderPathSet
 	return b
 }
 
-func (b *RuleBuilder) IsEqualTo(value any) RuleBuilderConditionSet {
-	b.comparatorType = ComparatorTypeEquality
-	b.comparatorValue = value
+// IsEqualTo sets the value to compare to.
+func (b *RuleBuilder) IsEqualTo(value any) RuleBuilderTypeAssigner {
+	b.comparatorFunc = func(v any) bool { return v == value }
 	return b
 }
 
-func (b *RuleBuilder) Matches(comparator func(any) bool) RuleBuilderConditionSet {
-	b.comparatorType = ComparatorTypeFunction
-	b.comparatorValue = comparator
+// Matches sets the function to use to compare the value at ValuePath to.
+func (b *RuleBuilder) Matches(comparator func(any) bool) RuleBuilderTypeAssigner {
+	b.comparatorFunc = comparator
 	return b
 }
 
-func (b *RuleBuilder) ThenAssignType(newType reflect.Type) RuleBuilderNewTypeSet {
+// ThenAssignType sets the type to assign to the target if the rule matches.
+func (b *RuleBuilder) ThenAssignType(newType reflect.Type) RuleBuilderFinalizer {
 	b.newType = newType
 	return b
 }
 
-func (b *RuleBuilder) BuildRule() Rule {
-	return Rule{
+// Build builds the Rule and returns the errors encountered while building.
+func (b *RuleBuilder) Build() ([]error, Rule) {
+	return b.errors, Rule{
 		b.valuePath,
-		b.comparatorType,
-		b.comparatorValue,
+		b.comparatorFunc,
 		b.newType,
 	}
-}
-
-func (b *RuleBuilder) Errors() []error {
-	return b.errors
 }
 
 func (b *RuleBuilder) appendError(err error) {

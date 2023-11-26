@@ -8,8 +8,6 @@ import (
 
 func rulesEqual(a Rule, b Rule) bool {
 	return a.ValuePath.IsEqualTo(&b.ValuePath) &&
-		a.ComparatorType == b.ComparatorType &&
-		a.ComparatorValue == b.ComparatorValue &&
 		a.NewType == b.NewType
 }
 
@@ -24,20 +22,25 @@ func TestRuleBuilder(t *testing.T) {
 		t.Fatalf("error parsing input path [%s]: %s", valuePathString, err)
 	}
 	expectedRule := Rule{
-		ValuePath:       *valuePath,
-		ComparatorType:  ComparatorTypeEquality,
-		ComparatorValue: comparatorValue,
-		NewType:         newType,
+		ValuePath:          *valuePath,
+		ComparatorFunction: func(v any) bool { return v == comparatorValue },
+		NewType:            newType,
 	}
 
 	// Act
-	rule := NewRuleBuilder().
+	errors, rule := NewRuleBuilder().
 		WhenValueAtPathString(valuePathString).
 		IsEqualTo(comparatorValue).
 		ThenAssignType(newType).
-		BuildRule()
+		Build()
 
 	// Assert
+	if len(errors) > 0 {
+		for _, err := range errors {
+			t.Log(err)
+		}
+		t.Fatalf("expected no errors, but got %d errors", len(errors))
+	}
 	if !rulesEqual(rule, expectedRule) {
 		t.Fatalf("expected rule to be %+v, but got %+v", expectedRule, rule)
 	}
