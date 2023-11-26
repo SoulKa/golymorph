@@ -16,8 +16,11 @@ type TypeMap map[any]reflect.Type
 
 // Polymorphism is a mapper that assigns a target type based on a discriminator value
 type Polymorphism struct {
+	// targetPath is the path to the object to assign the new type to
 	targetPath objectpath.ObjectPath
-	rules      []Rule
+
+	// rules is a list of rules to apply. The first rule that matches is used to determine the target type.
+	rules []Rule
 }
 
 type Polymorpher interface {

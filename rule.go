@@ -10,6 +10,7 @@ type ComparatorType int
 
 const (
 	ComparatorTypeEquality ComparatorType = iota
+	ComparatorTypeFunction
 )
 
 // Rule is a rule for a polymorphism mapper.
@@ -34,6 +35,14 @@ func (r *Rule) Matches(source any) (error, bool) {
 	switch r.ComparatorType {
 	case ComparatorTypeEquality:
 		return nil, sourceValue.Interface() == r.ComparatorValue
+	case ComparatorTypeFunction:
+		if reflect.TypeOf(r.ComparatorValue).Kind() != reflect.Func {
+			return fmt.Errorf("comparator is not a function"), false
+		} else if comparator, ok := r.ComparatorValue.(func(any) bool); !ok {
+			return fmt.Errorf("comparator function signature does not match"), false
+		} else {
+			return nil, comparator(sourceValue.Interface())
+		}
 	default:
 		return fmt.Errorf("unknown comparator type %d", r.ComparatorType), false
 	}

@@ -56,6 +56,11 @@ func NewObjectPathFromString(s string) (error, *ObjectPath) {
 	return nil, &path
 }
 
+// NewSelfReferencePath creates a new ObjectPath with a single self reference element. The path is relative.
+func NewSelfReferencePath() *ObjectPath {
+	return &ObjectPath{Elements{ElementSelfReference}, false}
+}
+
 // IsAbsolutePath returns true if the path starts with a root element
 func (p *ObjectPath) IsAbsolutePath() bool {
 	return p.isAbsolute
