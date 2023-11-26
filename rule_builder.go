@@ -20,6 +20,7 @@ type RuleBuilderBase interface {
 
 type RuleBuilderPathSet interface {
 	IsEqualTo(value any) RuleBuilderConditionSet
+	Matches(comparator func(any) bool) RuleBuilderConditionSet
 }
 
 type RuleBuilderConditionSet interface {
@@ -41,7 +42,7 @@ func (b *RuleBuilder) WhenValueAt(valuePath objectpath.ObjectPath) RuleBuilderPa
 
 func (b *RuleBuilder) WhenValueAtPathString(valuePath string) RuleBuilderPathSet {
 	if err, path := objectpath.NewObjectPathFromString(valuePath); err != nil {
-		b.AppendError(err)
+		b.appendError(err)
 	} else {
 		b.valuePath = *path
 	}
@@ -51,6 +52,12 @@ func (b *RuleBuilder) WhenValueAtPathString(valuePath string) RuleBuilderPathSet
 func (b *RuleBuilder) IsEqualTo(value any) RuleBuilderConditionSet {
 	b.comparatorType = ComparatorTypeEquality
 	b.comparatorValue = value
+	return b
+}
+
+func (b *RuleBuilder) Matches(comparator func(any) bool) RuleBuilderConditionSet {
+	b.comparatorType = ComparatorTypeFunction
+	b.comparatorValue = comparator
 	return b
 }
 
@@ -72,6 +79,6 @@ func (b *RuleBuilder) Errors() []error {
 	return b.errors
 }
 
-func (b *RuleBuilder) AppendError(err error) {
+func (b *RuleBuilder) appendError(err error) {
 	b.errors = append(b.errors, err)
 }
