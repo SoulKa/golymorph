@@ -7,8 +7,7 @@ import (
 
 // RulePolymorphism is a mapper that assigns a target type based on the given rules
 type RulePolymorphism struct {
-	// targetPath is the path to the object to assign the new type to
-	targetPath objectpath.ObjectPath
+	Polymorphism
 
 	// rules is a list of rules to apply. The first rule that matches is used to determine the target type.
 	rules []Rule

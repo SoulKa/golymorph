@@ -9,8 +9,7 @@ import (
 
 // TypeMapPolymorphism is a mapper that assigns a target type based on a discriminator value and a type map
 type TypeMapPolymorphism struct {
-	// targetPath is the path to the object to assign the new type to
-	targetPath objectpath.ObjectPath
+	Polymorphism
 
 	// discriminatorPath is the path to the discriminator value
 	discriminatorPath objectpath.ObjectPath
