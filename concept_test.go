@@ -136,3 +136,13 @@ func TestCompareAny(t *testing.T) {
 		t.Fatalf("expected %v to equal %v", a, b)
 	}
 }
+
+func TestAnyMap(t *testing.T) {
+	typeVal := reflect.TypeOf(int64(0))
+	anyMap := TypeMap{
+		"foo": typeVal,
+	}
+	if anyMap["foo"] != typeVal {
+		t.Fatalf(`expected anyMap["foo"] to equal %+v`, typeVal)
+	}
+}

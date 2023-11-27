@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"github.com/SoulKa/golymorph/objectpath"
 	"reflect"
-	"strings"
 )
 
-type Mapper interface {
-}
-
-// TypeMap is a map of discriminator values to reflect.Type
 type TypeMap map[any]reflect.Type
 
-// Polymorphism is a mapper that assigns a target type based on a discriminator value
-type Polymorphism struct {
+type Polymorpher interface {
+	// AssignTargetType assigns the determined type to target based on the polymorphism rules. The matching rule with the
+	// highest priority is used. If no rule matches, the target type is not changed. The source and target must be pointers.
+	AssignTargetType(source any, target any) (error, bool)
+}
+
+// RulePolymorphism is a mapper that assigns a target type based on the given rules
+type RulePolymorphism struct {
 	// targetPath is the path to the object to assign the new type to
 	targetPath objectpath.ObjectPath
 
@@ -23,59 +24,26 @@ type Polymorphism struct {
 	rules []Rule
 }
 
-type Polymorpher interface {
-	AssignTargetType(source any, target any) error
+// TypeMapPolymorphism is a mapper that assigns a target type based on a discriminator value and a type map
+type TypeMapPolymorphism struct {
+	// targetPath is the path to the object to assign the new type to
+	targetPath objectpath.ObjectPath
+
+	// discriminatorPath is the path to the discriminator value
+	discriminatorPath objectpath.ObjectPath
+
+	// typeMap is a map of discriminator values to types
+	typeMap TypeMap
 }
 
-// NewDiscriminatingPolymorphism creates a new Polymorphism mapper.
-func NewDiscriminatingPolymorphism(discriminatorKey string, targetPath string, mapping TypeMap) (error, *Polymorphism) {
-
-	// parse discriminator key
-	err, discriminatorKeyObjectPath := objectpath.NewObjectPathFromString(discriminatorKey)
-	if err != nil {
-		return errors.Join(fmt.Errorf("error parsing discriminator key path"), err), nil
-	}
-
-	// parse target path
-	if !strings.HasPrefix(targetPath, "/") {
-		targetPath = "/" + targetPath // make target path absolute
-	}
-	err, targetObjectPath := objectpath.NewObjectPathFromString(targetPath)
-	if err != nil {
-		return errors.Join(fmt.Errorf("error parsing target path"), err), nil
-	}
-
-	// make discriminator path absolute
-	if err := discriminatorKeyObjectPath.ToAbsolutePath(targetObjectPath); err != nil {
-		return err, nil
-	}
-
-	// create rules
-	var rules []Rule
-	for discriminatorValue, targetType := range mapping {
-		rules = append(rules, Rule{
-			*discriminatorKeyObjectPath,
-			func(v any) bool { return v == discriminatorValue },
-			targetType,
-		})
-	}
-
-	return nil, &Polymorphism{
-		*targetObjectPath,
-		rules,
-	}
-}
-
-// AssignTargetType assigns the determined type to target based on the polymorphism rules. The matching rule with the
-// highest priority is used. If no rule matches, the target type is not changed. The source and target must be pointers.
-func (polymorphism *Polymorphism) AssignTargetType(source any, target any) (error, bool) {
+func (p *RulePolymorphism) AssignTargetType(source any, target any) (error, bool) {
 
 	// check for each rule if it matches and assign type if it does
-	for _, rule := range polymorphism.rules {
+	for _, rule := range p.rules {
 		if err, matches := rule.Matches(source); err != nil {
 			return errors.Join(errors.New("error applying rule"), err), false
 		} else if matches {
-			if err := objectpath.AssignTypeAtPath(target, polymorphism.targetPath, rule.NewType); err != nil {
+			if err := objectpath.AssignTypeAtPath(target, p.targetPath, rule.NewType); err != nil {
 				return errors.Join(errors.New("error assigning type to target"), err), false
 			}
 			return nil, true
@@ -83,4 +51,23 @@ func (polymorphism *Polymorphism) AssignTargetType(source any, target any) (erro
 	}
 	return nil, false
 
+}
+
+func (p *TypeMapPolymorphism) AssignTargetType(source any, target any) (error, bool) {
+
+	// get discriminator value
+	var discriminatorValue reflect.Value
+	if err := objectpath.GetValueAtPath(source, p.discriminatorPath, &discriminatorValue); err != nil {
+		return errors.Join(errors.New("error getting discriminator value"), err), false
+	}
+	rawDiscriminatorValue := discriminatorValue.Interface()
+	fmt.Printf("discriminator value: %+v\n", rawDiscriminatorValue)
+
+	// get type from type map
+	if newType, ok := p.typeMap[rawDiscriminatorValue]; !ok {
+		return nil, false
+	} else if err := objectpath.AssignTypeAtPath(target, p.targetPath, newType); err != nil {
+		return errors.Join(errors.New("error assigning type to target"), err), false
+	}
+	return nil, true
 }
