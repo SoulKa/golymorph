@@ -38,9 +38,13 @@ var testCases = []TestCase{
 func TestPolymorphism_AssignTargetType(t *testing.T) {
 
 	// Arrange
-	err, polymorphism := NewDiscriminatingPolymorphism("type", "/specifics", animalTypeMap)
-	if err != nil {
-		t.Fatalf("error creating polymorphism: %s", err)
+	errs, polymorphism := NewPolymorphismBuilder().
+		DefineTypeAt("specifics").
+		UsingTypeMap(animalTypeMap).
+		WithDiscriminatorAt("type").
+		Build()
+	if HasErrors(t, errs) {
+		t.Fatalf("error creating polymorphism: %s", errs)
 	}
 	t.Logf("polymorphism: %+v\n", polymorphism)
 
