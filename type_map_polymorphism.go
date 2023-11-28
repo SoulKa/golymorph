@@ -3,6 +3,7 @@ package golymorph
 import (
 	"errors"
 	"fmt"
+	golimorphError "github.com/SoulKa/golymorph/error"
 	"github.com/SoulKa/golymorph/objectpath"
 	"reflect"
 )
@@ -30,7 +31,10 @@ func (p *TypeMapPolymorphism) AssignTargetType(source any, target any) error {
 
 	// get type from type map
 	if newType, ok := p.typeMap[rawDiscriminatorValue]; !ok {
-		return nil
+		return &golimorphError.UnresolvedTypeError{
+			Err:        fmt.Errorf("type map does not contain any key of value [%+v]", rawDiscriminatorValue),
+			TargetPath: p.targetPath.String(),
+		}
 	} else if err := objectpath.AssignTypeAtPath(target, p.targetPath, newType); err != nil {
 		return errors.Join(errors.New("error assigning type to target"), err)
 	}

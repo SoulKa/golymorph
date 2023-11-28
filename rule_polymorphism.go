@@ -2,6 +2,7 @@ package golymorph
 
 import (
 	"errors"
+	golimorphError "github.com/SoulKa/golymorph/error"
 	"github.com/SoulKa/golymorph/objectpath"
 )
 
@@ -26,6 +27,10 @@ func (p *RulePolymorphism) AssignTargetType(source any, target any) error {
 			return nil
 		}
 	}
-	return nil
 
+	// no rule matched
+	return &golimorphError.UnresolvedTypeError{
+		Err:        errors.New("no rule matched"),
+		TargetPath: p.targetPath.String(),
+	}
 }
