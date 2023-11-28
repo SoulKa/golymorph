@@ -6,49 +6,49 @@ import (
 	"strings"
 )
 
-type PolymorphismBuilderBase struct {
+type polymorphismBuilderBase struct {
 	targetPath objectpath.ObjectPath
 	errors     []error
 }
 
-type PolymorphismTypeMapBuilder struct {
-	PolymorphismBuilderBase
+type polymorphismTypeMapBuilder struct {
+	polymorphismBuilderBase
 	typeMap           TypeMap
 	discriminatorPath objectpath.ObjectPath
 }
 
-type PolymorphismRuleBuilder struct {
-	PolymorphismBuilderBase
+type polymorphismRuleBuilder struct {
+	polymorphismBuilderBase
 	rules []Rule
 }
 
-type PolymorphismBuilderEmpty interface {
-	DefineTypeAt(targetPath string) PolymorphismBuilderStrategySelector
+type polymorphismBuilderEmpty interface {
+	DefineTypeAt(targetPath string) polymorphismBuilderStrategySelector
 }
 
-type PolymorphismBuilderStrategySelector interface {
-	UsingRule(rule Rule) PolymorphismBuilderRuleAdder
-	UsingTypeMap(typeMap TypeMap) PolymorphismBuilderDiscriminatorKeyDefiner
+type polymorphismBuilderStrategySelector interface {
+	UsingRule(rule Rule) polymorphismBuilderRuleAdder
+	UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner
 }
 
-type PolymorphismBuilderRuleAdder interface {
-	UsingRule(rule Rule) PolymorphismBuilderRuleAdder
+type polymorphismBuilderRuleAdder interface {
+	UsingRule(rule Rule) polymorphismBuilderRuleAdder
 	Build() (error, TypeResolver)
 }
 
-type PolymorphismBuilderDiscriminatorKeyDefiner interface {
-	WithDiscriminatorAt(discriminatorKey string) PolymorphismBuilderFinalizer
+type polymorphismBuilderDiscriminatorKeyDefiner interface {
+	WithDiscriminatorAt(discriminatorKey string) polymorphismBuilderFinalizer
 }
 
-type PolymorphismBuilderFinalizer interface {
+type polymorphismBuilderFinalizer interface {
 	Build() (error, TypeResolver)
 }
 
-func NewPolymorphismBuilder() PolymorphismBuilderEmpty {
-	return &PolymorphismBuilderBase{*objectpath.NewSelfReferencePath(), []error{}}
+func NewPolymorphismBuilder() polymorphismBuilderEmpty {
+	return &polymorphismBuilderBase{*objectpath.NewSelfReferencePath(), []error{}}
 }
 
-func (b *PolymorphismBuilderBase) DefineTypeAt(targetPath string) PolymorphismBuilderStrategySelector {
+func (b *polymorphismBuilderBase) DefineTypeAt(targetPath string) polymorphismBuilderStrategySelector {
 	// make target path absolute
 	if !strings.HasPrefix(targetPath, "/") {
 		targetPath = "/" + targetPath
@@ -63,26 +63,26 @@ func (b *PolymorphismBuilderBase) DefineTypeAt(targetPath string) PolymorphismBu
 	return b
 }
 
-func (b *PolymorphismBuilderBase) UsingRule(rule Rule) PolymorphismBuilderRuleAdder {
-	return &PolymorphismRuleBuilder{
-		PolymorphismBuilderBase: *b,
+func (b *polymorphismBuilderBase) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
+	return &polymorphismRuleBuilder{
+		polymorphismBuilderBase: *b,
 		rules:                   []Rule{rule},
 	}
 }
 
-func (b *PolymorphismRuleBuilder) UsingRule(rule Rule) PolymorphismBuilderRuleAdder {
+func (b *polymorphismRuleBuilder) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
 	b.rules = append(b.rules, rule)
 	return b
 }
 
-func (b *PolymorphismBuilderBase) UsingTypeMap(typeMap TypeMap) PolymorphismBuilderDiscriminatorKeyDefiner {
-	return &PolymorphismTypeMapBuilder{
-		PolymorphismBuilderBase: *b,
+func (b *polymorphismBuilderBase) UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner {
+	return &polymorphismTypeMapBuilder{
+		polymorphismBuilderBase: *b,
 		typeMap:                 typeMap,
 	}
 }
 
-func (b *PolymorphismTypeMapBuilder) WithDiscriminatorAt(discriminatorKey string) PolymorphismBuilderFinalizer {
+func (b *polymorphismTypeMapBuilder) WithDiscriminatorAt(discriminatorKey string) polymorphismBuilderFinalizer {
 	if err, path := objectpath.NewObjectPathFromString(discriminatorKey); err != nil {
 		b.errors = append(b.errors, err)
 	} else if err := path.ToAbsolutePath(&b.targetPath); err != nil {
@@ -93,14 +93,14 @@ func (b *PolymorphismTypeMapBuilder) WithDiscriminatorAt(discriminatorKey string
 	return b
 }
 
-func (b *PolymorphismRuleBuilder) Build() (error, TypeResolver) {
+func (b *polymorphismRuleBuilder) Build() (error, TypeResolver) {
 	if len(b.errors) > 0 {
 		return errors.Join(b.errors...), nil
 	}
 	return nil, &RulePolymorphism{Polymorphism{b.targetPath}, b.rules}
 }
 
-func (b *PolymorphismTypeMapBuilder) Build() (error, TypeResolver) {
+func (b *polymorphismTypeMapBuilder) Build() (error, TypeResolver) {
 	if len(b.errors) > 0 {
 		return errors.Join(b.errors...), nil
 	}
