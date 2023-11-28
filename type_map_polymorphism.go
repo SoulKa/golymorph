@@ -18,21 +18,21 @@ type TypeMapPolymorphism struct {
 	typeMap TypeMap
 }
 
-func (p *TypeMapPolymorphism) AssignTargetType(source any, target any) (error, bool) {
+func (p *TypeMapPolymorphism) AssignTargetType(source any, target any) error {
 
 	// get discriminator value
 	var discriminatorValue reflect.Value
 	if err := objectpath.GetValueAtPath(source, p.discriminatorPath, &discriminatorValue); err != nil {
-		return errors.Join(errors.New("error getting discriminator value"), err), false
+		return errors.Join(errors.New("error getting discriminator value"), err)
 	}
 	rawDiscriminatorValue := discriminatorValue.Interface()
 	fmt.Printf("discriminator value: %+v\n", rawDiscriminatorValue)
 
 	// get type from type map
 	if newType, ok := p.typeMap[rawDiscriminatorValue]; !ok {
-		return nil, false
+		return nil
 	} else if err := objectpath.AssignTypeAtPath(target, p.targetPath, newType); err != nil {
-		return errors.Join(errors.New("error assigning type to target"), err), false
+		return errors.Join(errors.New("error assigning type to target"), err)
 	}
-	return nil, true
+	return nil
 }

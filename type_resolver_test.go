@@ -59,10 +59,8 @@ func TestPolymorphism_AssignTargetType(t *testing.T) {
 
 		// Act
 		var actualAnimal Animal
-		if err, applied := polymorphism.AssignTargetType(&actualAnimalJson, &actualAnimal); err != nil {
+		if err := polymorphism.AssignTargetType(&actualAnimalJson, &actualAnimal); err != nil {
 			t.Fatalf("error assigning target type to horse: %s", err)
-		} else if !applied {
-			t.Fatalf("expected polymorphism to be applied")
 		}
 		t.Logf("actualAnimal: %+v\n", actualAnimal)
 

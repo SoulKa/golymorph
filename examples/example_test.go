@@ -47,10 +47,8 @@ func TestBasicPolymorphismFromJson(t *testing.T) {
 
 	// create a new event
 	var event Event
-	if err, b := golymorph.UnmarshalJSON(resolver, []byte(alertEventJson), &event); err != nil {
+	if err := golymorph.UnmarshalJSON(resolver, []byte(alertEventJson), &event); err != nil {
 		t.Fatalf("error unmarshalling event: %s", err)
-	} else if !b {
-		t.Fatalf("no type assigned")
 	}
 
 	// continue to work with the event
@@ -101,11 +99,8 @@ func TestBasicPolymorphismWithManualParsing(t *testing.T) {
 
 	// create a new event
 	var event Event
-	err, assigned := polymorpher.AssignTargetType(&jsonMap, &event)
-	if err != nil {
+	if err := polymorpher.AssignTargetType(&jsonMap, &event); err != nil {
 		t.Fatalf("error assigning target type: %s", err)
-	} else if !assigned {
-		t.Fatalf("no type assigned")
 	}
 
 	// use mapstructure to unmarshal the payload into the event

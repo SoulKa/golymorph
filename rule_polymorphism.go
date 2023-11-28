@@ -13,19 +13,19 @@ type RulePolymorphism struct {
 	rules []Rule
 }
 
-func (p *RulePolymorphism) AssignTargetType(source any, target any) (error, bool) {
+func (p *RulePolymorphism) AssignTargetType(source any, target any) error {
 
 	// check for each rule if it matches and assign type if it does
 	for _, rule := range p.rules {
 		if err, matches := rule.Matches(source); err != nil {
-			return errors.Join(errors.New("error applying rule"), err), false
+			return errors.Join(errors.New("error applying rule"), err)
 		} else if matches {
 			if err := objectpath.AssignTypeAtPath(target, p.targetPath, rule.NewType); err != nil {
-				return errors.Join(errors.New("error assigning type to target"), err), false
+				return errors.Join(errors.New("error assigning type to target"), err)
 			}
-			return nil, true
+			return nil
 		}
 	}
-	return nil, false
+	return nil
 
 }
