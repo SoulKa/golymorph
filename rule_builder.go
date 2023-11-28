@@ -13,20 +13,25 @@ type ruleBuilder struct {
 }
 
 type ruleBuilderBase interface {
-	WhenValueAt(valuePath objectpath.ObjectPath) ruleBuilderConditionSetter
-	WhenValueAtPathString(valuePath string) ruleBuilderConditionSetter
+	// WhenValueAt sets the path to the value in the source to compare.
+	WhenValueAt(valuePath string) ruleBuilderConditionSetter
 }
 
 type ruleBuilderConditionSetter interface {
+	// IsEqualTo sets the value to compare to.
 	IsEqualTo(value any) ruleBuilderTypeAssigner
+
+	// Matches sets the function to use to compare the value at ValuePath to.
 	Matches(comparator func(any) bool) ruleBuilderTypeAssigner
 }
 
 type ruleBuilderTypeAssigner interface {
+	// ThenAssignType sets the type to assign to the target if the rule matches.
 	ThenAssignType(newType reflect.Type) ruleBuilderFinalizer
 }
 
 type ruleBuilderFinalizer interface {
+	// Build builds the Rule and returns the errors encountered while building.
 	Build() ([]error, Rule)
 }
 
@@ -35,14 +40,7 @@ func NewRuleBuilder() ruleBuilderBase {
 	return &ruleBuilder{}
 }
 
-// WhenValueAt sets the path to the value in the source to compare.
-func (b *ruleBuilder) WhenValueAt(valuePath objectpath.ObjectPath) ruleBuilderConditionSetter {
-	b.valuePath = valuePath
-	return b
-}
-
-// WhenValueAtPathString sets the path to the value in the source to compare.
-func (b *ruleBuilder) WhenValueAtPathString(valuePath string) ruleBuilderConditionSetter {
+func (b *ruleBuilder) WhenValueAt(valuePath string) ruleBuilderConditionSetter {
 	if err, path := objectpath.NewObjectPathFromString(valuePath); err != nil {
 		b.appendError(err)
 	} else {
@@ -51,25 +49,21 @@ func (b *ruleBuilder) WhenValueAtPathString(valuePath string) ruleBuilderConditi
 	return b
 }
 
-// IsEqualTo sets the value to compare to.
 func (b *ruleBuilder) IsEqualTo(value any) ruleBuilderTypeAssigner {
 	b.comparatorFunc = func(v any) bool { return v == value }
 	return b
 }
 
-// Matches sets the function to use to compare the value at ValuePath to.
 func (b *ruleBuilder) Matches(comparator func(any) bool) ruleBuilderTypeAssigner {
 	b.comparatorFunc = comparator
 	return b
 }
 
-// ThenAssignType sets the type to assign to the target if the rule matches.
 func (b *ruleBuilder) ThenAssignType(newType reflect.Type) ruleBuilderFinalizer {
 	b.newType = newType
 	return b
 }
 
-// Build builds the Rule and returns the errors encountered while building.
 func (b *ruleBuilder) Build() ([]error, Rule) {
 	return b.errors, Rule{
 		b.valuePath,
