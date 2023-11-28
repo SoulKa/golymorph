@@ -2,6 +2,7 @@ package golymorph
 
 import (
 	"encoding/json"
+	"github.com/SoulKa/golymorph/objectpath"
 	"github.com/mitchellh/mapstructure"
 	"reflect"
 	"testing"
@@ -38,13 +39,19 @@ var testCases = []TestCase{
 func TestPolymorphism_AssignTargetType(t *testing.T) {
 
 	// Arrange
-	err, polymorphism := NewPolymorphismBuilder().
-		DefineTypeAt("specifics").
-		UsingTypeMap(animalTypeMap).
-		WithDiscriminatorAt("type").
-		Build()
+	err, targetPath := objectpath.NewObjectPathFromString("/specifics")
 	if err != nil {
-		t.Fatalf("error building polymorphism: %s", err)
+		t.Fatalf("error creating target path: %s", err)
+	}
+	err, discriminatorPath := objectpath.NewObjectPathFromString("/specifics/type")
+	if err != nil {
+		t.Fatalf("error creating discriminator path: %s", err)
+	}
+	polymorphism := &TypeMapPolymorphism{
+		Polymorphism: Polymorphism{
+			TargetPath: *targetPath},
+		DiscriminatorPath: *discriminatorPath,
+		TypeMap:           animalTypeMap,
 	}
 	t.Logf("polymorphism: %+v\n", polymorphism)
 

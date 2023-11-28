@@ -9,7 +9,7 @@ func TestPolymorphismBuilder_UsingRule(t *testing.T) {
 
 	// Arrange
 	errors, rule1 := NewRuleBuilder().
-		WhenValueAtPathString("foo/bar").
+		WhenValueAt("foo/bar").
 		IsEqualTo("test").
 		ThenAssignType(reflect.TypeOf(int64(0))).
 		Build()
@@ -19,7 +19,7 @@ func TestPolymorphismBuilder_UsingRule(t *testing.T) {
 
 	// Arrange
 	errors, rule2 := NewRuleBuilder().
-		WhenValueAtPathString("foo/bar").
+		WhenValueAt("foo/bar").
 		IsEqualTo("test").
 		ThenAssignType(reflect.TypeOf(int64(0))).
 		Build()

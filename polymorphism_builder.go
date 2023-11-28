@@ -1,54 +1,58 @@
 package golymorph
 
 import (
-	"errors"
 	"github.com/SoulKa/golymorph/objectpath"
 	"strings"
 )
 
-type PolymorphismBuilderBase struct {
+type polymorphismBuilderBase struct {
 	targetPath objectpath.ObjectPath
 	errors     []error
 }
 
-type PolymorphismTypeMapBuilder struct {
-	PolymorphismBuilderBase
-	typeMap           TypeMap
-	discriminatorPath objectpath.ObjectPath
+type polymorphismBuilderEmpty interface {
+	// DefineTypeAt defines the target path of the polymorphism. This is the path where the polymorphism
+	// will be applied, i.e. where the new type is set. For valid paths see objectpath.NewObjectPathFromString.
+	DefineTypeAt(targetPath string) polymorphismBuilderStrategySelector
 }
 
-type PolymorphismRuleBuilder struct {
-	PolymorphismBuilderBase
-	rules []Rule
+type polymorphismBuilderStrategySelector interface {
+	// UsingRule defines a rule that is used to determine the new type. The rules are applied in the
+	// order they are defined. The first rule that matches is used to determine the new type.
+	UsingRule(rule Rule) polymorphismBuilderRuleAdder
+
+	// UsingTypeMap defines a type map that is used to determine the new type. The type map is applied
+	UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner
 }
 
-type PolymorphismBuilderEmpty interface {
-	DefineTypeAt(targetPath string) PolymorphismBuilderStrategySelector
-}
+type polymorphismBuilderRuleAdder interface {
+	// UsingRule defines a rule that is used to determine the new type. The rules are applied in the
+	// order they are defined. The first rule that matches is used to determine the new type.
+	UsingRule(rule Rule) polymorphismBuilderRuleAdder
 
-type PolymorphismBuilderStrategySelector interface {
-	UsingRule(rule Rule) PolymorphismBuilderRuleAdder
-	UsingTypeMap(typeMap TypeMap) PolymorphismBuilderDiscriminatorKeyDefiner
-}
-
-type PolymorphismBuilderRuleAdder interface {
-	UsingRule(rule Rule) PolymorphismBuilderRuleAdder
+	// Build creates a new TypeResolver that can be used to resolve a polymorphic type.
 	Build() (error, TypeResolver)
 }
 
-type PolymorphismBuilderDiscriminatorKeyDefiner interface {
-	WithDiscriminatorAt(discriminatorKey string) PolymorphismBuilderFinalizer
+type polymorphismBuilderDiscriminatorKeyDefiner interface {
+	// WithDiscriminatorAt defines the path to the discriminator key. The discriminator key is used to
+	// determine the new type. The value of the discriminator key is used to lookup the new type in the
+	// type map.
+	WithDiscriminatorAt(discriminatorKey string) polymorphismBuilderFinalizer
 }
 
-type PolymorphismBuilderFinalizer interface {
+type polymorphismBuilderFinalizer interface {
+	// Build creates a new TypeResolver that can be used to resolve a polymorphic type.
 	Build() (error, TypeResolver)
 }
 
-func NewPolymorphismBuilder() PolymorphismBuilderEmpty {
-	return &PolymorphismBuilderBase{*objectpath.NewSelfReferencePath(), []error{}}
+// NewPolymorphismBuilder creates a new polymorphism builder that is used in a human readable way to create a polymorphism.
+// It only allows a valid combination of rules and type maps.
+func NewPolymorphismBuilder() polymorphismBuilderEmpty {
+	return &polymorphismBuilderBase{*objectpath.NewSelfReferencePath(), []error{}}
 }
 
-func (b *PolymorphismBuilderBase) DefineTypeAt(targetPath string) PolymorphismBuilderStrategySelector {
+func (b *polymorphismBuilderBase) DefineTypeAt(targetPath string) polymorphismBuilderStrategySelector {
 	// make target path absolute
 	if !strings.HasPrefix(targetPath, "/") {
 		targetPath = "/" + targetPath
@@ -63,46 +67,16 @@ func (b *PolymorphismBuilderBase) DefineTypeAt(targetPath string) PolymorphismBu
 	return b
 }
 
-func (b *PolymorphismBuilderBase) UsingRule(rule Rule) PolymorphismBuilderRuleAdder {
-	return &PolymorphismRuleBuilder{
-		PolymorphismBuilderBase: *b,
+func (b *polymorphismBuilderBase) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
+	return &polymorphismRuleBuilder{
+		polymorphismBuilderBase: *b,
 		rules:                   []Rule{rule},
 	}
 }
 
-func (b *PolymorphismRuleBuilder) UsingRule(rule Rule) PolymorphismBuilderRuleAdder {
-	b.rules = append(b.rules, rule)
-	return b
-}
-
-func (b *PolymorphismBuilderBase) UsingTypeMap(typeMap TypeMap) PolymorphismBuilderDiscriminatorKeyDefiner {
-	return &PolymorphismTypeMapBuilder{
-		PolymorphismBuilderBase: *b,
+func (b *polymorphismBuilderBase) UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner {
+	return &polymorphismTypeMapBuilder{
+		polymorphismBuilderBase: *b,
 		typeMap:                 typeMap,
 	}
-}
-
-func (b *PolymorphismTypeMapBuilder) WithDiscriminatorAt(discriminatorKey string) PolymorphismBuilderFinalizer {
-	if err, path := objectpath.NewObjectPathFromString(discriminatorKey); err != nil {
-		b.errors = append(b.errors, err)
-	} else if err := path.ToAbsolutePath(&b.targetPath); err != nil {
-		b.errors = append(b.errors, err)
-	} else {
-		b.discriminatorPath = *path
-	}
-	return b
-}
-
-func (b *PolymorphismRuleBuilder) Build() (error, TypeResolver) {
-	if len(b.errors) > 0 {
-		return errors.Join(b.errors...), nil
-	}
-	return nil, &RulePolymorphism{Polymorphism{b.targetPath}, b.rules}
-}
-
-func (b *PolymorphismTypeMapBuilder) Build() (error, TypeResolver) {
-	if len(b.errors) > 0 {
-		return errors.Join(b.errors...), nil
-	}
-	return nil, &TypeMapPolymorphism{Polymorphism{b.targetPath}, b.discriminatorPath, b.typeMap}
 }

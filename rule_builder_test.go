@@ -29,7 +29,7 @@ func TestRuleBuilder(t *testing.T) {
 
 	// Act
 	errors, rule := NewRuleBuilder().
-		WhenValueAtPathString(valuePathString).
+		WhenValueAt(valuePathString).
 		IsEqualTo(comparatorValue).
 		ThenAssignType(newType).
 		Build()
