@@ -28,15 +28,15 @@ func TestPolymorphismBuilder_UsingRule(t *testing.T) {
 	}
 
 	// Act
-	errors, polymorphism := NewPolymorphismBuilder().
+	err, polymorphism := NewPolymorphismBuilder().
 		DefineTypeAt("foo/bar").
 		UsingRule(rule1).
 		UsingRule(rule2).
 		Build()
 
 	// Assert
-	if HasErrors(t, errors) {
-		t.Fatalf("expected no errors, but got %d errors", len(errors))
+	if err != nil {
+		t.Fatalf("expected no errors, but got %s", err)
 	} else if polymorphism == nil {
 		t.Fatalf("expected polymorphism to not be nil")
 	}
@@ -50,15 +50,15 @@ func TestPolymorphismBuilder_UsingTypeMap(t *testing.T) {
 	}
 
 	// Act
-	errors, polymorphism := NewPolymorphismBuilder().
+	err, polymorphism := NewPolymorphismBuilder().
 		DefineTypeAt("foo/bar").
 		UsingTypeMap(typeMap).
 		WithDiscriminatorAt("foo/bar/discriminator").
 		Build()
 
 	// Assert
-	if HasErrors(t, errors) {
-		t.Fatalf("expected no errors, but got %d errors", len(errors))
+	if err != nil {
+		t.Fatalf("expected no errors, but got %s", err)
 	} else if polymorphism == nil {
 		t.Fatalf("expected polymorphism to not be nil")
 	}
