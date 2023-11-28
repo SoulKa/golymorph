@@ -27,7 +27,6 @@ func (p *TypeMapPolymorphism) AssignTargetType(source any, target any) error {
 		return errors.Join(errors.New("error getting discriminator value"), err)
 	}
 	rawDiscriminatorValue := discriminatorValue.Interface()
-	fmt.Printf("discriminator value: %+v\n", rawDiscriminatorValue)
 
 	// get type from type map
 	if newType, ok := p.TypeMap[rawDiscriminatorValue]; !ok {
