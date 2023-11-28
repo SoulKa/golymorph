@@ -1,4 +1,4 @@
-package rules
+package golymorph
 
 import (
 	"github.com/SoulKa/golymorph/objectpath"

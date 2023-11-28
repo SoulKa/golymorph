@@ -7,8 +7,8 @@ import (
 )
 
 type Polymorphism struct {
-	// targetPath is the path to the object to assign the new type to
-	targetPath objectpath.ObjectPath
+	// TargetPath is the path to the object to assign the new type to
+	TargetPath objectpath.ObjectPath
 }
 
 // UnmarshalJSON unmarshals the given JSON data into the given output object using the given TypeResolver.

@@ -26,5 +26,9 @@ func (b *polymorphismTypeMapBuilder) Build() (error, TypeResolver) {
 	if len(b.errors) > 0 {
 		return errors.Join(b.errors...), nil
 	}
-	return nil, &TypeMapPolymorphism{Polymorphism{b.targetPath}, b.discriminatorPath, b.typeMap}
+	return nil, &TypeMapPolymorphism{
+		Polymorphism: Polymorphism{
+			TargetPath: b.targetPath},
+		DiscriminatorPath: b.discriminatorPath,
+		TypeMap:           b.typeMap}
 }
