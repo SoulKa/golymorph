@@ -2,6 +2,7 @@ package golymorph
 
 import (
 	"github.com/SoulKa/golymorph/objectpath"
+	"github.com/SoulKa/golymorph/rules"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ type polymorphismBuilderEmpty interface {
 type polymorphismBuilderStrategySelector interface {
 	// UsingRule defines a rule that is used to determine the new type. The rules are applied in the
 	// order they are defined. The first rule that matches is used to determine the new type.
-	UsingRule(rule Rule) polymorphismBuilderRuleAdder
+	UsingRule(rule rules.Rule) polymorphismBuilderRuleAdder
 
 	// UsingTypeMap defines a type map that is used to determine the new type. The type map is applied
 	UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner
@@ -28,7 +29,7 @@ type polymorphismBuilderStrategySelector interface {
 type polymorphismBuilderRuleAdder interface {
 	// UsingRule defines a rule that is used to determine the new type. The rules are applied in the
 	// order they are defined. The first rule that matches is used to determine the new type.
-	UsingRule(rule Rule) polymorphismBuilderRuleAdder
+	UsingRule(rule rules.Rule) polymorphismBuilderRuleAdder
 
 	// Build creates a new TypeResolver that can be used to resolve a polymorphic type.
 	Build() (error, TypeResolver)
@@ -67,10 +68,10 @@ func (b *polymorphismBuilderBase) DefineTypeAt(targetPath string) polymorphismBu
 	return b
 }
 
-func (b *polymorphismBuilderBase) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
+func (b *polymorphismBuilderBase) UsingRule(rule rules.Rule) polymorphismBuilderRuleAdder {
 	return &polymorphismRuleBuilder{
 		polymorphismBuilderBase: *b,
-		rules:                   []Rule{rule},
+		rules:                   []rules.Rule{rule},
 	}
 }
 

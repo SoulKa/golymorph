@@ -4,6 +4,7 @@ import (
 	"errors"
 	golimorphError "github.com/SoulKa/golymorph/error"
 	"github.com/SoulKa/golymorph/objectpath"
+	"github.com/SoulKa/golymorph/rules"
 )
 
 // RulePolymorphism is a mapper that assigns a target type based on the given rules
@@ -11,7 +12,7 @@ type RulePolymorphism struct {
 	Polymorphism
 
 	// rules is a list of rules to apply. The first rule that matches is used to determine the target type.
-	rules []Rule
+	rules []rules.Rule
 }
 
 func (p *RulePolymorphism) AssignTargetType(source any, target any) error {

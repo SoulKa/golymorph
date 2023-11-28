@@ -2,14 +2,15 @@ package golymorph
 
 import (
 	"errors"
+	"github.com/SoulKa/golymorph/rules"
 )
 
 type polymorphismRuleBuilder struct {
 	polymorphismBuilderBase
-	rules []Rule
+	rules []rules.Rule
 }
 
-func (b *polymorphismRuleBuilder) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
+func (b *polymorphismRuleBuilder) UsingRule(rule rules.Rule) polymorphismBuilderRuleAdder {
 	b.rules = append(b.rules, rule)
 	return b
 }

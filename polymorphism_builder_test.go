@@ -1,6 +1,7 @@
 package golymorph
 
 import (
+	"github.com/SoulKa/golymorph/rules"
 	"reflect"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestPolymorphismBuilder_UsingRule(t *testing.T) {
 
 	// Arrange
-	errors, rule1 := NewRuleBuilder().
+	errors, rule1 := rules.NewRuleBuilder().
 		WhenValueAt("foo/bar").
 		IsEqualTo("test").
 		ThenAssignType(reflect.TypeOf(int64(0))).
@@ -18,7 +19,7 @@ func TestPolymorphismBuilder_UsingRule(t *testing.T) {
 	}
 
 	// Arrange
-	errors, rule2 := NewRuleBuilder().
+	errors, rule2 := rules.NewRuleBuilder().
 		WhenValueAt("foo/bar").
 		IsEqualTo("test").
 		ThenAssignType(reflect.TypeOf(int64(0))).

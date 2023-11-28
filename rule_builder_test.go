@@ -2,11 +2,12 @@ package golymorph
 
 import (
 	"github.com/SoulKa/golymorph/objectpath"
+	"github.com/SoulKa/golymorph/rules"
 	"reflect"
 	"testing"
 )
 
-func rulesEqual(a Rule, b Rule) bool {
+func rulesEqual(a rules.Rule, b rules.Rule) bool {
 	return a.ValuePath.IsEqualTo(&b.ValuePath) &&
 		a.NewType == b.NewType
 }
@@ -21,14 +22,14 @@ func TestRuleBuilder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error parsing input path [%s]: %s", valuePathString, err)
 	}
-	expectedRule := Rule{
+	expectedRule := rules.Rule{
 		ValuePath:          *valuePath,
 		ComparatorFunction: func(v any) bool { return v == comparatorValue },
 		NewType:            newType,
 	}
 
 	// Act
-	errors, rule := NewRuleBuilder().
+	errors, rule := rules.NewRuleBuilder().
 		WhenValueAt(valuePathString).
 		IsEqualTo(comparatorValue).
 		ThenAssignType(newType).
