@@ -1,7 +1,6 @@
 package golymorph
 
 import (
-	"errors"
 	"github.com/SoulKa/golymorph/objectpath"
 	"strings"
 )
@@ -9,17 +8,6 @@ import (
 type polymorphismBuilderBase struct {
 	targetPath objectpath.ObjectPath
 	errors     []error
-}
-
-type polymorphismTypeMapBuilder struct {
-	polymorphismBuilderBase
-	typeMap           TypeMap
-	discriminatorPath objectpath.ObjectPath
-}
-
-type polymorphismRuleBuilder struct {
-	polymorphismBuilderBase
-	rules []Rule
 }
 
 type polymorphismBuilderEmpty interface {
@@ -70,39 +58,9 @@ func (b *polymorphismBuilderBase) UsingRule(rule Rule) polymorphismBuilderRuleAd
 	}
 }
 
-func (b *polymorphismRuleBuilder) UsingRule(rule Rule) polymorphismBuilderRuleAdder {
-	b.rules = append(b.rules, rule)
-	return b
-}
-
 func (b *polymorphismBuilderBase) UsingTypeMap(typeMap TypeMap) polymorphismBuilderDiscriminatorKeyDefiner {
 	return &polymorphismTypeMapBuilder{
 		polymorphismBuilderBase: *b,
 		typeMap:                 typeMap,
 	}
-}
-
-func (b *polymorphismTypeMapBuilder) WithDiscriminatorAt(discriminatorKey string) polymorphismBuilderFinalizer {
-	if err, path := objectpath.NewObjectPathFromString(discriminatorKey); err != nil {
-		b.errors = append(b.errors, err)
-	} else if err := path.ToAbsolutePath(&b.targetPath); err != nil {
-		b.errors = append(b.errors, err)
-	} else {
-		b.discriminatorPath = *path
-	}
-	return b
-}
-
-func (b *polymorphismRuleBuilder) Build() (error, TypeResolver) {
-	if len(b.errors) > 0 {
-		return errors.Join(b.errors...), nil
-	}
-	return nil, &RulePolymorphism{Polymorphism{b.targetPath}, b.rules}
-}
-
-func (b *polymorphismTypeMapBuilder) Build() (error, TypeResolver) {
-	if len(b.errors) > 0 {
-		return errors.Join(b.errors...), nil
-	}
-	return nil, &TypeMapPolymorphism{Polymorphism{b.targetPath}, b.discriminatorPath, b.typeMap}
 }
