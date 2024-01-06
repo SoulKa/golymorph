@@ -105,3 +105,14 @@ func main() {
 	fmt.Printf("event payload: %T %+v\n", event.Payload, event.Payload.(AlertPayload))
 }
 ```
+
+## Contributing
+
+I am very happy for contributions or feature suggestions. As long as this module is not stable released (version 1.0.0) I am also open for refactorings.
+
+**How to:**
+ - Fork it
+ - Create your feature branch (git checkout -b my-new-feature)
+ - Commit your changes (git commit -am 'Added some feature')
+ - Push to the branch (git push origin my-new-feature)
+ - Create new Pull Request
